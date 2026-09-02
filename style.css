@@ -274,6 +274,10 @@ main {
   background: var(--brand);
 }
 
+.lock-screen[hidden] {
+  display: none;
+}
+
 .lock-card {
   width: 100%;
   max-width: 320px;

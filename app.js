@@ -7,16 +7,13 @@
   'use strict';
 
   // Soft access gate: keeps casual passersby out, NOT real security —
-  // this is a static site, so the hash below is fully visible in the
-  // page source to anyone determined to look.
+  // this is a static site, so anyone determined to look can read this
+  // value straight out of the page source. Deliberately synchronous and
+  // dependency-free (no Web Crypto) so it can't silently fail in
+  // restrictive in-app browsers (LINE, Messenger, etc.) that block APIs
+  // like crypto.subtle without raising a visible error.
   const UNLOCK_KEY = 'kopor.unlocked';
-  const PASSCODE_HASH = '249547964f722d98445dc7685a9683360d7fac04665893ba51237c54ced65102';
-
-  async function sha256Hex(text) {
-    const bytes = new TextEncoder().encode(text);
-    const digest = await crypto.subtle.digest('SHA-256', bytes);
-    return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
-  }
+  const PASSCODE = 'kpspl2025';
 
   const lockScreen = document.getElementById('lockScreen');
   const appContent = document.getElementById('appContent');
@@ -37,10 +34,9 @@
     passcodeInput.focus();
   }
 
-  lockForm.addEventListener('submit', async (e) => {
+  lockForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const hash = await sha256Hex(passcodeInput.value);
-    if (hash === PASSCODE_HASH) {
+    if (passcodeInput.value === PASSCODE) {
       localStorage.setItem(UNLOCK_KEY, 'true');
       lockError.hidden = true;
       showApp();

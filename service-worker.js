@@ -1,7 +1,7 @@
 // Cache-first service worker so the calculator works fully offline.
 // Bump CACHE_NAME whenever any cached file changes, so clients pick up
 // the new version instead of serving stale files forever.
-const CACHE_NAME = 'kopor-price-calc-v2';
+const CACHE_NAME = 'kopor-price-calc-v3';
 const PRECACHE_URLS = [
   './',
   './index.html',

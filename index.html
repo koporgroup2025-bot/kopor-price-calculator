@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e05a3c">
+<title>KoPor คำนวณราคาออเดอร์</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="app-header">
+  <h1>KoPor คำนวณราคาออเดอร์</h1>
+  <p class="subtitle">เครื่องมือภายในทีมแอดมิน — ไม่เชื่อมต่อระบบใด ๆ</p>
+</header>
+
+<main>
+  <section class="qty-section" aria-label="จำนวนสินค้า">
+    <div class="qty-row" data-product="squidQty">
+      <label for="squidQty">หมึกกังฟู <span class="price-hint">199 บาท/กระปุก</span></label>
+      <div class="stepper">
+        <button type="button" class="step-btn" data-action="dec" data-target="squidQty" aria-label="ลดจำนวนหมึกกังฟู">−</button>
+        <input type="number" id="squidQty" inputmode="numeric" min="0" step="1" value="0">
+        <button type="button" class="step-btn" data-action="inc" data-target="squidQty" aria-label="เพิ่มจำนวนหมึกกังฟู">+</button>
+      </div>
+    </div>
+
+    <div class="qty-row" data-product="mooQty">
+      <label for="mooQty">หมูหมัดฮุค <span class="price-hint">149 บาท/กระปุก</span></label>
+      <div class="stepper">
+        <button type="button" class="step-btn" data-action="dec" data-target="mooQty" aria-label="ลดจำนวนหมูหมัดฮุค">−</button>
+        <input type="number" id="mooQty" inputmode="numeric" min="0" step="1" value="0">
+        <button type="button" class="step-btn" data-action="inc" data-target="mooQty" aria-label="เพิ่มจำนวนหมูหมัดฮุค">+</button>
+      </div>
+    </div>
+
+    <div class="qty-row" data-product="kwabeeQty">
+      <label for="kwabeeQty">กวาบี่กวาบอง <span class="price-hint">149 บาท/กระปุก</span></label>
+      <div class="stepper">
+        <button type="button" class="step-btn" data-action="dec" data-target="kwabeeQty" aria-label="ลดจำนวนกวาบี่กวาบอง">−</button>
+        <input type="number" id="kwabeeQty" inputmode="numeric" min="0" step="1" value="0">
+        <button type="button" class="step-btn" data-action="inc" data-target="kwabeeQty" aria-label="เพิ่มจำนวนกวาบี่กวาบอง">+</button>
+      </div>
+    </div>
+
+    <button type="button" id="resetBtn" class="reset-btn">รีเซ็ต</button>
+  </section>
+
+  <section class="result-section" aria-label="ผลคำนวณ">
+    <div id="emptyState" class="empty-state">กรอกจำนวนสินค้าด้านบนเพื่อคำนวณราคา</div>
+
+    <div id="resultBody" class="result-body" hidden>
+      <div class="breakdown">
+        <h2>รายละเอียดราคา</h2>
+        <ul id="stepsList"></ul>
+        <div class="shipping-line">
+          ค่าจัดส่ง = <span id="shippingText"></span>
+        </div>
+      </div>
+
+      <div class="grand-total">
+        <span class="grand-label">ยอดชำระทั้งหมด</span>
+        <span class="grand-value"><span id="grandAmount">0</span> บาท</span>
+      </div>
+
+      <button type="button" id="copyBtn" class="copy-btn">คัดลอกข้อความสรุป</button>
+    </div>
+  </section>
+
+  <section class="settings-section">
+    <details id="settingsDetails">
+      <summary>ตั้งค่าเลขบัญชี/ข้อมูลการโอน</summary>
+      <label for="paymentInfo" class="settings-label">ข้อความนี้จะแนบท้ายสรุปทุกครั้ง (บันทึกอัตโนมัติในเครื่องนี้)</label>
+      <textarea id="paymentInfo" rows="5"></textarea>
+    </details>
+  </section>
+</main>
+
+<script src="price-calculator.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

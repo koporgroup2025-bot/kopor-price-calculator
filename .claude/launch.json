@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kopor-static",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [".devserver.js"],
+      "port": 8080
+    }
+  ]
+}

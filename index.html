@@ -11,6 +11,17 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div id="lockScreen" class="lock-screen">
+  <form id="lockForm" class="lock-card">
+    <h1>KoPor คำนวณราคาออเดอร์</h1>
+    <p>กรุณาใส่รหัสผ่านทีมเพื่อเข้าใช้งาน</p>
+    <input type="password" id="passcodeInput" autocomplete="off" placeholder="รหัสผ่าน" aria-label="รหัสผ่าน">
+    <button type="submit" id="unlockBtn">เข้าใช้งาน</button>
+    <p id="lockError" class="lock-error" hidden>รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งค่ะ</p>
+  </form>
+</div>
+
+<div id="appContent" hidden>
 <header class="app-header">
   <h1>KoPor คำนวณราคาออเดอร์</h1>
   <p class="subtitle">เครื่องมือภายในทีมแอดมิน — ไม่เชื่อมต่อระบบใด ๆ</p>
@@ -74,9 +85,11 @@
       <summary>ตั้งค่าเลขบัญชี/ข้อมูลการโอน</summary>
       <label for="paymentInfo" class="settings-label">ข้อความนี้จะแนบท้ายสรุปทุกครั้ง (บันทึกอัตโนมัติในเครื่องนี้)</label>
       <textarea id="paymentInfo" rows="5"></textarea>
+      <button type="button" id="lockAgainBtn" class="lock-again-btn">ล็อกหน้าจออีกครั้ง</button>
     </details>
   </section>
 </main>
+</div>
 
 <script src="price-calculator.js"></script>
 <script src="app.js"></script>

@@ -6,6 +6,60 @@
 (function () {
   'use strict';
 
+  // Soft access gate: keeps casual passersby out, NOT real security —
+  // this is a static site, so the hash below is fully visible in the
+  // page source to anyone determined to look.
+  const UNLOCK_KEY = 'kopor.unlocked';
+  const PASSCODE_HASH = '249547964f722d98445dc7685a9683360d7fac04665893ba51237c54ced65102';
+
+  async function sha256Hex(text) {
+    const bytes = new TextEncoder().encode(text);
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  const lockScreen = document.getElementById('lockScreen');
+  const appContent = document.getElementById('appContent');
+  const lockForm = document.getElementById('lockForm');
+  const passcodeInput = document.getElementById('passcodeInput');
+  const lockError = document.getElementById('lockError');
+  const lockAgainBtn = document.getElementById('lockAgainBtn');
+
+  function showApp() {
+    lockScreen.hidden = true;
+    appContent.hidden = false;
+  }
+
+  function showLock() {
+    lockScreen.hidden = false;
+    appContent.hidden = true;
+    passcodeInput.value = '';
+    passcodeInput.focus();
+  }
+
+  lockForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const hash = await sha256Hex(passcodeInput.value);
+    if (hash === PASSCODE_HASH) {
+      localStorage.setItem(UNLOCK_KEY, 'true');
+      lockError.hidden = true;
+      showApp();
+    } else {
+      lockError.hidden = false;
+      passcodeInput.value = '';
+      passcodeInput.focus();
+    }
+  });
+
+  lockAgainBtn.addEventListener('click', () => {
+    localStorage.removeItem(UNLOCK_KEY);
+    showLock();
+  });
+
+  if (localStorage.getItem(UNLOCK_KEY) === 'true') {
+    showApp();
+  }
+
   const PAYMENT_INFO_KEY = 'kopor.paymentInfo';
   const DEFAULT_PAYMENT_INFO =
     'สามารถโอนได้ที่บัญชี\n' +

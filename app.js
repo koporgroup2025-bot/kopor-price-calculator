@@ -36,7 +36,11 @@
 
   lockForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    if (passcodeInput.value === PASSCODE) {
+    // Trim + lowercase before comparing: some mobile keyboards/in-app
+    // browsers auto-capitalize the first letter or add a trailing space,
+    // which would otherwise fail the match silently from the user's POV.
+    const entered = passcodeInput.value.trim().toLowerCase();
+    if (entered === PASSCODE) {
       localStorage.setItem(UNLOCK_KEY, 'true');
       lockError.hidden = true;
       showApp();

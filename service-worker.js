@@ -1,7 +1,9 @@
-// Cache-first service worker so the calculator works fully offline.
-// Bump CACHE_NAME whenever any cached file changes, so clients pick up
-// the new version instead of serving stale files forever.
-const CACHE_NAME = 'kopor-price-calc-v3';
+// Network-first service worker: always tries the network for the latest
+// files first, and only falls back to the cache when offline. This keeps
+// the app usable without a connection while avoiding the classic PWA trap
+// of a stale cache-first strategy silently serving old code after every
+// deploy. Bump CACHE_NAME whenever the precache list itself changes.
+const CACHE_NAME = 'kopor-price-calc-v4';
 const PRECACHE_URLS = [
   './',
   './index.html',
@@ -37,15 +39,12 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        if (response.ok && response.type === 'basic') {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      }).catch(() => cached);
-    })
+    fetch(event.request).then((response) => {
+      if (response.ok && response.type === 'basic') {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+      }
+      return response;
+    }).catch(() => caches.match(event.request))
   );
 });

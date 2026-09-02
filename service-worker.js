@@ -3,7 +3,7 @@
 // the app usable without a connection while avoiding the classic PWA trap
 // of a stale cache-first strategy silently serving old code after every
 // deploy. Bump CACHE_NAME whenever the precache list itself changes.
-const CACHE_NAME = 'kopor-price-calc-v4';
+const CACHE_NAME = 'kopor-price-calc-v5';
 const PRECACHE_URLS = [
   './',
   './index.html',
@@ -38,8 +38,13 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
+  // 'no-store' bypasses the browser's own HTTP cache too, not just the
+  // Cache API - without it, "network-first" would still silently reuse a
+  // recently-fetched HTTP-cached response instead of hitting the network.
+  const freshRequest = new Request(event.request, { cache: 'no-store' });
+
   event.respondWith(
-    fetch(event.request).then((response) => {
+    fetch(freshRequest).then((response) => {
       if (response.ok && response.type === 'basic') {
         const clone = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));

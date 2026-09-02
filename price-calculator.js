@@ -3,6 +3,15 @@
  * Exported both as CommonJS (for tests) and as `window.PriceCalculator`
  * (for the browser UI), so the exact same code path is what gets tested
  * and what runs live.
+ *
+ * The step-text wording here is ported directly from the LINE OA bot's
+ * PriceCalculator.gs (Bank-confirmed pricing, 2026-08-05) so the copy
+ * button produces text matching what customers already see from the bot.
+ * That includes calculateMixedPrice's chained .replace() calls, whose
+ * later two replacements never actually match anything (the first
+ * replace already consumes the substring they're looking for) - ported
+ * as-is since that's the real, live bot behavior, not what the comments
+ * in that file describe.
  */
 (function (root, factory) {
   const mod = factory();
@@ -15,99 +24,127 @@
 })(typeof window !== 'undefined' ? window : null, function () {
   'use strict';
 
-  function fmt(n) {
-    return n.toLocaleString('en-US');
+  function formatBaht(n) {
+    return Math.round(n).toLocaleString('en-US');
   }
 
   /**
-   * หมึกกังฟูอย่างเดียว (squid-only pricing table).
-   * Base promo unlocks at qty 3 (= 597 บาท, free shipping).
-   * Every unit past that is priced by pairing into 369-บาท คู่ + a 199 leftover.
+   * หมึกกังฟูอย่างเดียว. Base promo unlocks at qty 3 (597 บาท, free
+   * shipping); past that, units pair up into 369-บาท คู่ + a 199 leftover.
    */
-  function calcSquidOnly(qty) {
-    const steps = [];
-    if (qty <= 0) return { total: 0, shipping: 0, steps };
-
+  function calculateSquidPrice(qty) {
+    if (!qty || qty <= 0) {
+      return { total: 0, shipping: 0, grand: 0, steps: [] };
+    }
     if (qty === 1) {
-      steps.push(`หมึกกังฟู 1 กระปุก = ${fmt(199)} บาท`);
-      return { total: 199, shipping: 50, steps };
+      return { total: 199, shipping: 50, grand: 249, steps: ['หมึกกังฟู 1 กระปุก = ' + formatBaht(199) + ' บาท'] };
     }
     if (qty === 2) {
-      steps.push(`หมึกกังฟู 2 กระปุก = ${fmt(369)} บาท (ราคาปกติ ${fmt(398)} บาท)`);
-      return { total: 369, shipping: 50, steps };
-    }
-
-    // qty >= 3: base promo (3 กระปุก = 597, free shipping) then pair up the rest
-    steps.push(`โปรฐานหมึก 3 กระปุก = ${fmt(597)} บาท (ปลดล็อกส่งฟรี)`);
-    let total = 597;
-    const remainder = qty - 3;
-    const pairs = Math.floor(remainder / 2);
-    const rem = remainder % 2;
-    if (pairs > 0) {
-      const pairsTotal = pairs * 369;
-      steps.push(`หมึกส่วนเกิน ${pairs} คู่ x ${fmt(369)} บาท = ${fmt(pairsTotal)} บาท`);
-      total += pairsTotal;
-    }
-    if (rem > 0) {
-      const remTotal = rem * 199;
-      steps.push(`หมึกส่วนเกิน ${rem} กระปุก x ${fmt(199)} บาท = ${fmt(remTotal)} บาท`);
-      total += remTotal;
-    }
-    return { total, shipping: 0, steps };
-  }
-
-  /**
-   * หมูหมัดฮุค + กวาบี่กวาบอง รวมกัน (cold-chain pricing table; both items
-   * share one price table because they ship in the same chilled box).
-   * Base promo unlocks at qty 5 (= 739 บาท, free shipping). Past that,
-   * units are grouped into 3-กระปุก ชุด (379 บาท) + a leftover at 149/กระปุก.
-   *
-   * `label` lets the mixed-order calculation reuse this table (where the
-   * qty passed in is cold+squid combined) while phrasing the steps clearly.
-   */
-  function calcColdOnly(qty, label) {
-    label = label || 'หมู/แตงกวา';
-    const steps = [];
-    if (qty <= 0) return { total: 0, shipping: 0, steps };
-
-    if (qty === 1) {
-      steps.push(`${label} 1 กระปุก = ${fmt(149)} บาท`);
-      return { total: 149, shipping: 150, steps };
-    }
-    if (qty === 2) {
-      steps.push(`${label} 2 กระปุก = ${fmt(298)} บาท`);
-      return { total: 298, shipping: 150, steps };
+      return { total: 369, shipping: 50, grand: 419, steps: ['โปรหมึกกังฟู 2 กระปุก = ' + formatBaht(369) + ' บาท (ปกติ 398 บาท)'] };
     }
     if (qty === 3) {
-      steps.push(`${label} 3 กระปุก = ${fmt(379)} บาท (ราคาปกติ ${fmt(447)} บาท)`);
-      return { total: 379, shipping: 150, steps };
-    }
-    if (qty === 4) {
-      steps.push(`${label} 4 กระปุก = ${fmt(596)} บาท`);
-      return { total: 596, shipping: 150, steps };
+      return { total: 597, shipping: 0, grand: 597, steps: ['โปรฐานหมึกกังฟู 3 กระปุก = ' + formatBaht(597) + ' บาท (ปลดล็อกส่งฟรี)'] };
     }
 
-    // qty >= 5: base promo (5 กระปุก = 739, free shipping) then group the rest into sets of 3
-    steps.push(`โปรฐาน${label} 5 กระปุก = ${fmt(739)} บาท (ปลดล็อกส่งฟรี)`);
-    let total = 739;
-    const remainder = qty - 5;
-    const sets = Math.floor(remainder / 3);
-    const rem = remainder % 3;
-    if (sets > 0) {
-      const setsTotal = sets * 379;
-      steps.push(`${label} ส่วนเกิน ${sets} ชุด (ชุดละ 3 กระปุก) x ${fmt(379)} บาท = ${fmt(setsTotal)} บาท`);
-      total += setsTotal;
+    const R = qty - 3;
+    const pairs = Math.floor(R / 2);
+    const rem = R % 2;
+    const steps = ['โปรฐานหมึกกังฟู 3 กระปุก = ' + formatBaht(597) + ' บาท (ปลดล็อกส่งฟรี)'];
+    if (pairs > 0) {
+      steps.push('เพิ่มอีก ' + pairs + ' คู่ (คู่ละ 2 กระปุก) = ' + formatBaht(pairs * 369) + ' บาท');
     }
     if (rem > 0) {
-      const remTotal = rem * 149;
-      steps.push(`${label} ส่วนเกิน ${rem} กระปุก x ${fmt(149)} บาท = ${fmt(remTotal)} บาท`);
-      total += remTotal;
+      steps.push('เพิ่มอีก ' + rem + ' กระปุกเดี่ยว = ' + formatBaht(rem * 199) + ' บาท');
     }
-    return { total, shipping: 0, steps };
+    const total = 597 + pairs * 369 + rem * 199;
+    return { total, shipping: 0, grand: total, steps };
   }
 
   /**
-   * Full order calculation for the three real products.
+   * หมู/แตงกวา รวมกัน (คละกันเองได้อิสระ). Base promo unlocks at qty 5
+   * (739 บาท, free shipping); past that, units group into 3-กระปุก ชุด
+   * (379 บาท) + a leftover at 149/กระปุก.
+   */
+  function calculateColdPrice(qty) {
+    if (!qty || qty <= 0) {
+      return { total: 0, shipping: 0, grand: 0, steps: [] };
+    }
+    if (qty === 1) {
+      return { total: 149, shipping: 150, grand: 299, steps: ['หมู/แตงกวา 1 กระปุก = ' + formatBaht(149) + ' บาท'] };
+    }
+    if (qty === 2) {
+      return { total: 298, shipping: 150, grand: 448, steps: ['หมู/แตงกวา 2 กระปุก = ' + formatBaht(298) + ' บาท'] };
+    }
+    if (qty === 3) {
+      return { total: 379, shipping: 150, grand: 529, steps: ['โปรหมู/แตงกวา 3 กระปุก = ' + formatBaht(379) + ' บาท (ปกติ 447 บาท)'] };
+    }
+    if (qty === 4) {
+      return { total: 596, shipping: 150, grand: 746, steps: ['หมู/แตงกวา 4 กระปุก = ' + formatBaht(596) + ' บาท'] };
+    }
+    if (qty === 5) {
+      return { total: 739, shipping: 0, grand: 739, steps: ['โปรฐานหมู/แตงกวา 5 กระปุก = ' + formatBaht(739) + ' บาท (ปลดล็อกส่งฟรี)'] };
+    }
+
+    const R = qty - 5;
+    const sets = Math.floor(R / 3);
+    const rem = R % 3;
+    const steps = ['โปรฐานหมู/แตงกวา 5 กระปุก = ' + formatBaht(739) + ' บาท (ปลดล็อกส่งฟรี)'];
+    if (sets > 0) {
+      steps.push('เพิ่มอีก ' + sets + ' ชุด (ชุดละ 3 กระปุก) = ' + formatBaht(sets * 379) + ' บาท');
+    }
+    if (rem > 0) {
+      steps.push('เพิ่มอีก ' + rem + ' กระปุกเดี่ยว = ' + formatBaht(rem * 149) + ' บาท');
+    }
+    const total = 739 + sets * 379 + rem * 149;
+    return { total, shipping: 0, grand: total, steps };
+  }
+
+  /**
+   * คละ (มีทั้งหมึกและ cold ในออเดอร์เดียว): combined qty drives the cold
+   * price table (ships in one chilled box regardless), then squid adds a
+   * +50/กระปุก surcharge (199-149 price difference).
+   */
+  function calculateMixedPrice(coldQty, squidQty) {
+    coldQty = coldQty || 0;
+    squidQty = squidQty || 0;
+
+    const total = coldQty + squidQty;
+    const base = calculateColdPrice(total);
+
+    const steps = base.steps.map((s) =>
+      s.replace('หมู/แตงกวา', 'สินค้ารวม').replace('โปรฐานหมู/แตงกวา', 'โปรฐานคละสินค้า').replace('โปรหมู/แตงกวา', 'โปรคละสินค้า')
+    );
+
+    if (squidQty > 0) {
+      steps.push('หมึกกังฟู ' + squidQty + ' กระปุก (รวมในชุดคละ) = ' + formatBaht(squidQty * 50) + ' บาท (คิดกระปุกละ 50 บาทเมื่อคละกับหมู/แตงกวา)');
+    }
+
+    const grand = base.total + squidQty * 50 + base.shipping;
+    return { total: base.total + squidQty * 50, shipping: base.shipping, grand, steps };
+  }
+
+  /**
+   * @param {number} coldQty จำนวนกระปุกหมู/แตงกวารวมกัน (0 ได้ถ้าไม่มี)
+   * @param {number} squidQty จำนวนกระปุกหมึก (0 ได้ถ้าไม่มี)
+   */
+  function calculateOrderPrice(coldQty, squidQty) {
+    coldQty = coldQty || 0;
+    squidQty = squidQty || 0;
+
+    if (coldQty === 0 && squidQty === 0) {
+      return { total: 0, shipping: 0, grand: 0, steps: [] };
+    }
+    if (coldQty === 0) {
+      return calculateSquidPrice(squidQty);
+    }
+    if (squidQty === 0) {
+      return calculateColdPrice(coldQty);
+    }
+    return calculateMixedPrice(coldQty, squidQty);
+  }
+
+  /**
+   * Adapts calculateOrderPrice to the app's product names.
    * @param {{squidQty:number, mooQty:number, kwabeeQty:number}} qtys
    * @returns {{steps:string[], shipping:number, grand:number}}
    */
@@ -117,36 +154,16 @@
     const kwabeeQty = Math.max(0, Math.floor(qtys.kwabeeQty || 0));
     const coldQty = mooQty + kwabeeQty;
 
-    if (squidQty === 0 && coldQty === 0) {
-      return { steps: [], shipping: 0, grand: 0 };
-    }
-
-    if (coldQty === 0) {
-      const r = calcSquidOnly(squidQty);
-      return { steps: r.steps, shipping: r.shipping, grand: r.total + r.shipping };
-    }
-
-    if (squidQty === 0) {
-      const r = calcColdOnly(coldQty, 'หมู/แตงกวา');
-      return { steps: r.steps, shipping: r.shipping, grand: r.total + r.shipping };
-    }
-
-    // Mixed order: cold + squid ship together in one chilled box, so the
-    // combined qty drives the base price table; squid adds a +50/กระปุก
-    // surcharge on top (199-149 price difference) since it's riding along
-    // in a box it doesn't normally need.
-    const combinedQty = coldQty + squidQty;
-    const base = calcColdOnly(combinedQty, `แพ็กแช่เย็นรวม (แช่เย็น ${coldQty} + หมึกคละ ${squidQty})`);
-    const squidSurcharge = squidQty * 50;
-    const steps = base.steps.slice();
-    steps.push(`หมึกคละแช่เย็น ${squidQty} กระปุก ส่วนต่างกระปุกละ ${fmt(50)} บาท = ${fmt(squidSurcharge)} บาท`);
-    const grand = base.total + squidSurcharge + base.shipping;
-    return { steps, shipping: base.shipping, grand };
+    const r = calculateOrderPrice(coldQty, squidQty);
+    return { steps: r.steps, shipping: r.shipping, grand: r.grand };
   }
 
   return {
-    calcSquidOnly,
-    calcColdOnly,
+    calculateSquidPrice,
+    calculateColdPrice,
+    calculateMixedPrice,
+    calculateOrderPrice,
     calculatePrice,
+    formatBaht,
   };
 });

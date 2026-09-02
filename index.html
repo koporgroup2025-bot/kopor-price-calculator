@@ -27,7 +27,13 @@
   <p class="subtitle">เครื่องมือภายในทีมแอดมิน — ไม่เชื่อมต่อระบบใด ๆ</p>
 </header>
 
+<nav class="tabs" role="tablist">
+  <button type="button" class="tab-btn active" id="tabBtnCalc" data-tab="calcPanel" role="tab" aria-selected="true">เครื่องคำนวณ</button>
+  <button type="button" class="tab-btn" id="tabBtnMessages" data-tab="messagesPanel" role="tab" aria-selected="false">ชุดข้อความ</button>
+</nav>
+
 <main>
+<div id="calcPanel" class="tab-panel">
   <section class="qty-section" aria-label="จำนวนสินค้า">
     <div class="qty-row" data-product="squidQty">
       <label for="squidQty">หมึกกังฟู <span class="price-hint">199 บาท/กระปุก</span></label>
@@ -88,6 +94,134 @@
       <button type="button" id="lockAgainBtn" class="lock-again-btn">ล็อกหน้าจออีกครั้ง</button>
     </details>
   </section>
+</div>
+
+<div id="messagesPanel" class="tab-panel" hidden>
+  <p class="messages-hint">แก้ไขข้อความในกล่องได้เลย ระบบจะจำการแก้ไขไว้ในเครื่องนี้อัตโนมัติ</p>
+
+  <section class="message-set" data-key="tracking">
+    <h2>1. แจ้ง Tracking</h2>
+    <textarea class="message-text" id="msg-tracking" rows="2">ถ้าหากทางร้านจัดส่งแล้วจะส่ง tracking no. ให้เลยน้าาาา</textarea>
+    <button type="button" class="msg-copy-btn" data-for="msg-tracking">คัดลอก</button>
+  </section>
+
+  <section class="message-set" data-key="payment">
+    <h2>2. ข้อมูลการโอนเงิน</h2>
+    <textarea class="message-text" id="msg-payment" rows="5">สามารถโอนได้ที่บัญชี
+414-224975-0
+ธนาคารไทยพาณิชย์ SCB
+ศุภกร นิธิวรนันท์</textarea>
+    <button type="button" class="msg-copy-btn" data-for="msg-payment">คัดลอก</button>
+  </section>
+
+  <section class="message-set" data-key="packaging">
+    <h2>3. ประกาศแพ็กเกจใหม่</h2>
+    <textarea class="message-text" id="msg-packaging" rows="10">โก๋ขออัปเดตแพ็กเกจใหม่ของ "หมึกกังฟู" และ "กวาบี่กวาบอง" ค้าบบบ 🦑🥒
+
+กระปุกใหม่: รูปทรงอ้วนขึ้น สูงน้อยลง แต่ปริมาณกรัมเท่าเดิม! ยังคงเต็มอิ่มครับ! 💯⚖️
+
+เราเพิ่มการซีลฝาอลูมิเนียม (แทนแผ่นโฟมแบบเดิม) เพื่อล็อกความสดใหม่ และรักษาคุณภาพอาหารให้ดีที่สุดจนถึงมือคุณลูกค้าครับ
+"ปลอดภัย แน่นหนา แน่นอน!" 🔒
+
+ขอบพระคุณคุณลูกค้าที่อุดหนุนและซัพพอร์ตทางร้านมาโดยตลอดนะค้าบบบ 😎🙏💖</textarea>
+    <button type="button" class="msg-copy-btn" data-for="msg-packaging">คัดลอก</button>
+  </section>
+
+  <section class="message-set" data-key="moo">
+    <h2>4. หมูหมัดฮุค (สินค้า)</h2>
+    <textarea class="message-text" id="msg-moo" rows="9">🐷หมูหมัดฮุค🐷
+เริ่มต้นกระปุกละ 149 บาท
+
+หมูหมักซอสสเต๊ก เนื้อสันในนุ่มละลายในปาก มันน้อย เสริฟพร้อมน้ำจิ้มซีฟู้ดสูตรคุณแม่ อร่อยครบรสไม่เหมือนใคร
+
+ค่าส่ง 150 บาท
+จัดส่งแบบเย็น ราคาเหมา
+รับสินค้าทันที 1-2 วัน
+SAMEDAY-DELIVERY</textarea>
+    <button type="button" class="msg-copy-btn" data-for="msg-moo">คัดลอก</button>
+  </section>
+
+  <section class="message-set" data-key="squid">
+    <h2>5. หมึกกังฟู (สินค้า)</h2>
+    <textarea class="message-text" id="msg-squid" rows="8">🦑 หมึกกังฟู 🦑
+เริ่มต้นกระปุกละ 199 บาท
+
+หมึกกังฟู กรอบพรีเมียม โปรตีนล้วนๆไม่มีแป้ง หอมรสชีสแบบโรงหนัง ดิปด้วยซอสทรัฟเฟิ้ลสุดลงตัว
+
+ค่าส่ง 50 บาท
+NORMAL-DELIVERY</textarea>
+    <button type="button" class="msg-copy-btn" data-for="msg-squid">คัดลอก</button>
+  </section>
+
+  <section class="message-set" data-key="kwabee">
+    <h2>6. กวาบี่กวาบอง (สินค้า)</h2>
+    <textarea class="message-text" id="msg-kwabee" rows="9">🥒 กวาบี่กวาบอง 🥒
+เริ่มต้นกระปุกละ 149 บาท
+
+แตงกวาดองซอสโชยุราดด้วยน้ำจิ้มเสฉวน คำเดียวสดชื่น ครบรส เปรี้ยว เค็ม หวาน หอมน้ำมันงาเลย
+
+ค่าส่ง 150 บาท
+จัดส่งแบบเย็น ราคาเหมา
+รับสินค้าทันที 1-2 วัน
+SAMEDAY-DELIVERY</textarea>
+    <button type="button" class="msg-copy-btn" data-for="msg-kwabee">คัดลอก</button>
+  </section>
+
+  <section class="message-set" data-key="promo">
+    <h2>7. โปรโมชั่น (2 สินค้า)</h2>
+    <textarea class="message-text" id="msg-promo" rows="26">🥒🥒🆚🐷🐷
+Promotion : กวาบี่กวาบอง/หมูหมัดฮุค
+🔸 **3 กระปุก 379 บาท**
+(ปกติ 447 บาท)
+💰 ประหยัดทันที 68 บาท
+
+🔥 **5 กระปุก 739 บาท
+ส่งฟรีทั่วประเทศ**
+(ปกติ 895 บาท)
+💰 ประหยัดรวม 156 บาท
+ไม่มีค่าส่งอีกต่อไป
+
+===============
+🦑🦑🦑🦑🦑
+Promotion : หมึกกังฟู
+🔸 **2 กระปุก 369 บาท**
+(ปกติ 398 บาท)
+💰 ประหยัดทันที 29 บาท
+
+🔥 **3 กระปุก 597 บาท
+ส่งฟรีทั่วประเทศ**
+(ปกติ 647 บาท)
+💰 ประหยัดรวม 50 บาท
+ไม่มีค่าส่งอีกต่อไป
+
+🎉Promotion ข้างต้นสามารถคละได้ แต่จะยึดราคาเป็นโปรของแตงกวาเลยครับ แต่จะ +50 บาทในทุกๆจำนวนหมึกที่คละเข้าไปแทนครับ</textarea>
+    <button type="button" class="msg-copy-btn" data-for="msg-promo">คัดลอก</button>
+  </section>
+
+  <section class="message-set" data-key="cookMoo">
+    <h2>8. วิธีทำหมู</h2>
+    <textarea class="message-text" id="msg-cook-moo" rows="22">**🐷 วิธีการทำหมู (อัปเดตใหม่เพื่อความนุ่มฟินกว่าเดิม!)**
+
+▶️ เนื่องจาก Feedback จากคุณลูกค้า ทางร้านจึงได้ปรับเปลี่ยนรูปแบบใหม่นะครับ จากเดิมที่เป็นชิ้นเล็กร้านหั่นให้ **เปลี่ยนเป็นชิ้นใหญ่เพื่อให้คุณลูกค้าทำเสร็จแล้วนำมาหั่นเอง** ✨วิธีนี้จะได้เนื้อหมูที่นุ่มชุ่มฉ่ำกว่าเดิม และหน้าตาตรงปกตรงตามภาพขายเลยครับ 🤤
+
+---
+
+**⏱️ ปรับเวลาการทำใหม่ (ข้างกระปุก)**
+
+* เปลี่ยนจาก: อบพลิกฝั่งละ 4 นาที
+* **เปลี่ยนเป็น: อบพลิกฝั่งละ 8 นาที**
+* ⌛ *รวมเวลาใช้เวลา Cooking ทั้งหมด 16 นาทีครับ*
+
+---
+
+**💡 ทริคความอร่อยเพิ่มเติม**
+
+* 🔪 คุณลูกค้าสามารถลองหั่นตรงกลางเพื่อเช็คความสุกได้เลยครับ
+* ▶️ เนื่องจากส่วนหมูที่ร้านใช้เป็น **"สันใน"** เมื่อสุกแล้วเนื้ออาจจะมีสีอมชมพูหรือแดงได้บ้างนิดหน่อยนะครับ **ให้เช็คดูแค่ว่าไม่มีเลือดซึมออกมาก็ถือว่าสุกพร้อมทานแล้วครับ**
+* ⚠️ *ไม่แนะนำให้อบนานเกินไป ไม่งั้นเนื้อหมูอาจจะแห้งเกินไป (Overcooked) ได้ครับ*</textarea>
+    <button type="button" class="msg-copy-btn" data-for="msg-cook-moo">คัดลอก</button>
+  </section>
+</div>
 </main>
 </div>
 

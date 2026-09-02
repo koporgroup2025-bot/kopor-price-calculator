@@ -3,7 +3,7 @@
 // the app usable without a connection while avoiding the classic PWA trap
 // of a stale cache-first strategy silently serving old code after every
 // deploy. Bump CACHE_NAME whenever the precache list itself changes.
-const CACHE_NAME = 'kopor-price-calc-v5';
+const CACHE_NAME = 'kopor-price-calc-v6';
 const PRECACHE_URLS = [
   './',
   './index.html',

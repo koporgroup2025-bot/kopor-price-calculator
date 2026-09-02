@@ -12,7 +12,8 @@
   // dependency-free (no Web Crypto) so it can't silently fail in
   // restrictive in-app browsers (LINE, Messenger, etc.) that block APIs
   // like crypto.subtle without raising a visible error.
-  const UNLOCK_KEY = 'kopor.unlocked';
+  // Intentionally NOT persisted (no localStorage): the passcode prompt
+  // must reappear every time the app is opened or reloaded.
   const PASSCODE = 'kpspl2025';
 
   const lockScreen = document.getElementById('lockScreen');
@@ -41,7 +42,6 @@
     // which would otherwise fail the match silently from the user's POV.
     const entered = passcodeInput.value.trim().toLowerCase();
     if (entered === PASSCODE) {
-      localStorage.setItem(UNLOCK_KEY, 'true');
       lockError.hidden = true;
       showApp();
     } else {
@@ -52,13 +52,66 @@
   });
 
   lockAgainBtn.addEventListener('click', () => {
-    localStorage.removeItem(UNLOCK_KEY);
     showLock();
   });
 
-  if (localStorage.getItem(UNLOCK_KEY) === 'true') {
-    showApp();
+  // Tabs: "เครื่องคำนวณ" and "ชุดข้อความ" share one page, toggled by hiding panels.
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  tabBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach((b) => {
+        b.classList.toggle('active', b === btn);
+        b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+      });
+      document.querySelectorAll('.tab-panel').forEach((panel) => {
+        panel.hidden = panel.id !== btn.dataset.tab;
+      });
+    });
+  });
+
+  async function copyToClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      // Fallback for browsers/contexts without Clipboard API permission
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
   }
+
+  function flashCopied(btn, defaultLabel) {
+    btn.textContent = 'ก้อปแล้ว ✓';
+    btn.classList.add('copied');
+    clearTimeout(btn._copyResetTimer);
+    btn._copyResetTimer = setTimeout(() => {
+      btn.textContent = defaultLabel;
+      btn.classList.remove('copied');
+    }, 1800);
+  }
+
+  // Canned reply messages: each box saves its own edits, keyed by its id.
+  document.querySelectorAll('.message-text').forEach((ta) => {
+    const key = 'kopor.msg.' + ta.id;
+    const saved = localStorage.getItem(key);
+    if (saved !== null) ta.value = saved;
+    ta.addEventListener('input', () => {
+      localStorage.setItem(key, ta.value);
+    });
+  });
+
+  document.querySelectorAll('.msg-copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const ta = document.getElementById(btn.dataset.for);
+      await copyToClipboard(ta.value);
+      flashCopied(btn, 'คัดลอก');
+    });
+  });
 
   const PAYMENT_INFO_KEY = 'kopor.paymentInfo';
   const DEFAULT_PAYMENT_INFO =
@@ -88,7 +141,6 @@
   const paymentInfo = document.getElementById('paymentInfo');
 
   let lastSummaryText = '';
-  let copyResetTimer = null;
 
   function getQty(id) {
     const n = parseInt(inputs[id].value, 10);
@@ -202,26 +254,8 @@
 
   copyBtn.addEventListener('click', async () => {
     if (!lastSummaryText) return;
-    try {
-      await navigator.clipboard.writeText(lastSummaryText);
-    } catch (err) {
-      // Fallback for browsers/contexts without Clipboard API permission
-      const textarea = document.createElement('textarea');
-      textarea.value = lastSummaryText;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-    }
-    copyBtn.textContent = 'ก้อปแล้ว ✓';
-    copyBtn.classList.add('copied');
-    clearTimeout(copyResetTimer);
-    copyResetTimer = setTimeout(() => {
-      copyBtn.textContent = 'คัดลอกข้อความสรุป';
-      copyBtn.classList.remove('copied');
-    }, 1800);
+    await copyToClipboard(lastSummaryText);
+    flashCopied(copyBtn, 'คัดลอกข้อความสรุป');
   });
 
   // Payment info: load from localStorage, save on every edit.

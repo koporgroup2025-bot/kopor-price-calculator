@@ -14,7 +14,7 @@
   // like crypto.subtle without raising a visible error.
   // Intentionally NOT persisted (no localStorage): the passcode prompt
   // must reappear every time the app is opened or reloaded.
-  const PASSCODE = 'kpspl2025';
+  const PASSCODE = '250707';
 
   const lockScreen = document.getElementById('lockScreen');
   const appContent = document.getElementById('appContent');

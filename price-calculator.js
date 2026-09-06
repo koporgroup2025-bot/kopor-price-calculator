@@ -100,9 +100,19 @@
   }
 
   /**
-   * คละ (มีทั้งหมึกและ cold ในออเดอร์เดียว): combined qty drives the cold
-   * price table (ships in one chilled box regardless), then squid adds a
-   * +50/กระปุก surcharge (199-149 price difference).
+   * คละ (มีทั้งหมึกและ cold ในออเดอร์เดียว): compares two ways to price the
+   * same order and keeps whichever is cheaper for the customer —
+   *   1) "merged": combined qty drives the cold price table (ships in one
+   *      chilled box regardless), then squid adds a +50/กระปุก surcharge
+   *      (199-149 price difference).
+   *   2) "separate": each product hits its own promo table on its own qty
+   *      (so e.g. cold's own 3-กระปุก promo isn't lost just because the
+   *      combined total doesn't land on a promo tier), with a single
+   *      shipping charge since it's one chilled box either way.
+   * Merged wins every previously Bank-confirmed case (2+1→579, 4+1→789,
+   * 6+3→1417); this only changes the answer for combos nobody had priced
+   * before, where separate is strictly cheaper (e.g. cold3+squid1: merged
+   * would be 796, separate is 728).
    */
   function calculateMixedPrice(coldQty, squidQty) {
     coldQty = coldQty || 0;
@@ -111,16 +121,26 @@
     const total = coldQty + squidQty;
     const base = calculateColdPrice(total);
 
-    const steps = base.steps.map((s) =>
+    const mergedSteps = base.steps.map((s) =>
       s.replace('หมู/แตงกวา', 'สินค้ารวม').replace('โปรฐานหมู/แตงกวา', 'โปรฐานคละสินค้า').replace('โปรหมู/แตงกวา', 'โปรคละสินค้า')
     );
-
     if (squidQty > 0) {
-      steps.push('หมึกกังฟู ' + squidQty + ' กระปุก (รวมในชุดคละ) = ' + formatBaht(squidQty * 50) + ' บาท (คิดกระปุกละ 50 บาทเมื่อคละกับหมู/แตงกวา)');
+      mergedSteps.push('หมึกกังฟู ' + squidQty + ' กระปุก (รวมในชุดคละ) = ' + formatBaht(squidQty * 50) + ' บาท (คิดกระปุกละ 50 บาทเมื่อคละกับหมู/แตงกวา)');
     }
+    const mergedTotal = base.total + squidQty * 50;
+    const mergedGrand = mergedTotal + base.shipping;
 
-    const grand = base.total + squidQty * 50 + base.shipping;
-    return { total: base.total + squidQty * 50, shipping: base.shipping, grand, steps };
+    const coldPart = calculateColdPrice(coldQty);
+    const squidPart = calculateSquidPrice(squidQty);
+    const separateTotal = coldPart.total + squidPart.total;
+    const separateShipping = base.shipping; // one chilled box either way — free-ship threshold judged on combined qty
+    const separateGrand = separateTotal + separateShipping;
+    const separateSteps = coldPart.steps.concat(squidPart.steps);
+
+    if (separateGrand < mergedGrand) {
+      return { total: separateTotal, shipping: separateShipping, grand: separateGrand, steps: separateSteps };
+    }
+    return { total: mergedTotal, shipping: base.shipping, grand: mergedGrand, steps: mergedSteps };
   }
 
   /**

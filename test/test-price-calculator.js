@@ -33,6 +33,19 @@ const cases = [
       'หมึกกังฟู 3 กระปุก (รวมในชุดคละ) = 150 บาท (คิดกระปุกละ 50 บาทเมื่อคละกับหมู/แตงกวา)',
     ],
   },
+  {
+    // Merged (total=4 into cold table) would give 796 — but cold's own
+    // 3-กระปุก promo (379) + squid full price (199) + one shipping (150)
+    // = 728 is cheaper, so "separate" must win here.
+    name: 'คละ cold 3 + หมึก 1 (แยกตารางต้องถูกกว่า)',
+    qtys: { squidQty: 1, mooQty: 0, kwabeeQty: 3 },
+    grand: 728,
+    shipping: 150,
+    steps: [
+      'โปรหมู/แตงกวา 3 กระปุก = 379 บาท (ปกติ 447 บาท)',
+      'หมึกกังฟู 1 กระปุก = 199 บาท',
+    ],
+  },
 ];
 
 let failures = 0;
@@ -54,5 +67,5 @@ if (failures > 0) {
   console.log(`\n${failures} test(s) failed.`);
   process.exit(1);
 } else {
-  console.log('\nAll 7 test cases passed.');
+  console.log(`\nAll ${cases.length} test cases passed.`);
 }

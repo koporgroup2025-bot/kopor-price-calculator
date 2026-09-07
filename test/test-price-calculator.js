@@ -61,6 +61,59 @@ const cases = [
       'หมึกกังฟู 2 กระปุก (รวมในชุดคละ) = 100 บาท (คิดกระปุกละ 50 บาทเมื่อคละกับหมู/แตงกวา)',
     ],
   },
+  {
+    // Beyond squid's own base(3), a repeat-base block (547/3 units) beats
+    // plain pairs (369/2 + 199 leftover = 568) — confirmed with owner.
+    name: 'หมึกอย่างเดียว 6 กระปุก (repeat-base block ต้องชนะคู่+เศษ)',
+    qtys: { squidQty: 6, mooQty: 0, kwabeeQty: 0 },
+    grand: 1144,
+    steps: [
+      'โปรฐานหมึกกังฟู 3 กระปุก = 597 บาท (ปลดล็อกส่งฟรี)',
+      'เพิ่มอีก 1 ชุด (ชุดละ 3 กระปุก) = 547 บาท',
+    ],
+  },
+  {
+    // 2 repeat-base blocks (1,094) beat 3 pairs (1,107) — confirmed with owner.
+    name: 'หมึกอย่างเดียว 9 กระปุก (2 repeat-base blocks ต้องชนะ 3 คู่)',
+    qtys: { squidQty: 9, mooQty: 0, kwabeeQty: 0 },
+    grand: 1691,
+  },
+  {
+    // Beyond cold's own base(5), a repeat-base block (583/5 units) beats
+    // a set-of-3 plus 2 leftovers (379+298=677) — confirmed with owner.
+    name: 'cold อย่างเดียว 10 กระปุก (repeat-base block ต้องชนะชุด3+เศษ)',
+    qtys: { squidQty: 0, mooQty: 10, kwabeeQty: 0 },
+    grand: 1322,
+    steps: [
+      'โปรฐานหมู/แตงกวา 5 กระปุก = 739 บาท (ปลดล็อกส่งฟรี)',
+      'เพิ่มอีก 1 ชุดฐาน (ชุดละ 5 กระปุก) = 583 บาท',
+    ],
+  },
+  {
+    // Candidate B: cold(2) ≤ 5 borrows 3 squid to complete the base, the
+    // remaining 2 squid are genuinely pure excess and earn their own pair
+    // discount (369) — cheaper than candidate A's flat +50/unit (1,287).
+    name: 'คละ cold 2 + หมึก 5 (หมึกส่วนเกินล้วนๆ ต้องกินโปรคู่ของตัวเอง)',
+    qtys: { squidQty: 5, mooQty: 0, kwabeeQty: 2 },
+    grand: 1258,
+    shipping: 0,
+    steps: [
+      'โปรฐานคละสินค้า 5 กระปุก = 739 บาท (ปลดล็อกส่งฟรี)',
+      'หมึกกังฟู 3 กระปุก (ใช้เติมฐาน) = 150 บาท (คิดกระปุกละ 50 บาทเมื่อคละกับหมู/แตงกวา)',
+      'หมึกกังฟูส่วนเกิน: เพิ่มอีก 1 คู่ (คู่ละ 2 กระปุก) = 369 บาท',
+    ],
+  },
+  {
+    // cold(5) already meets its own base alone (borrowed=0, all 3 squid
+    // would be "pure excess" under candidate B = 739+547=1,286), but
+    // candidate A (merge total=8 into the cold table: 739+379=1,118, +3×50
+    // squid surcharge = 1,268) is cheaper and must win — this is the case
+    // that showed candidate B can't be applied unconditionally once cold
+    // itself already reaches/exceeds its own base.
+    name: 'คละ cold 5 + หมึก 3 (cold คุมฐานเองแล้ว candidate A ต้องชนะ B)',
+    qtys: { squidQty: 3, mooQty: 5, kwabeeQty: 0 },
+    grand: 1268,
+  },
 ];
 
 let failures = 0;

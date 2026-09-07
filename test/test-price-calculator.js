@@ -46,6 +46,21 @@ const cases = [
       'หมึกกังฟู 1 กระปุก = 199 บาท',
     ],
   },
+  {
+    // total=5 hits the cold table's real base-5 free-ship promo (739 vs
+    // linear 745) — that must win even though separate (cold3's own
+    // 379-promo + squid2's own 369-promo = 748) computes lower. Real
+    // order that exposed this: squid2+moo1+kwabee2, screenshot showed the
+    // app wrongly outputting 748 before this promo-zone gate was added.
+    name: 'คละ cold 3 + หมึก 2 (โปรฐาน 5 ต้องชนะแม้แยกตารางถูกกว่า)',
+    qtys: { squidQty: 2, mooQty: 1, kwabeeQty: 2 },
+    grand: 839,
+    shipping: 0,
+    steps: [
+      'โปรฐานสินค้ารวม 5 กระปุก = 739 บาท (ปลดล็อกส่งฟรี)',
+      'หมึกกังฟู 2 กระปุก (รวมในชุดคละ) = 100 บาท (คิดกระปุกละ 50 บาทเมื่อคละกับหมู/แตงกวา)',
+    ],
+  },
 ];
 
 let failures = 0;

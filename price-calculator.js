@@ -100,19 +100,31 @@
   }
 
   /**
-   * คละ (มีทั้งหมึกและ cold ในออเดอร์เดียว): compares two ways to price the
-   * same order and keeps whichever is cheaper for the customer —
-   *   1) "merged": combined qty drives the cold price table (ships in one
-   *      chilled box regardless), then squid adds a +50/กระปุก surcharge
-   *      (199-149 price difference).
-   *   2) "separate": each product hits its own promo table on its own qty
-   *      (so e.g. cold's own 3-กระปุก promo isn't lost just because the
-   *      combined total doesn't land on a promo tier), with a single
-   *      shipping charge since it's one chilled box either way.
-   * Merged wins every previously Bank-confirmed case (2+1→579, 4+1→789,
-   * 6+3→1417); this only changes the answer for combos nobody had priced
-   * before, where separate is strictly cheaper (e.g. cold3+squid1: merged
-   * would be 796, separate is 728).
+   * คละ (มีทั้งหมึกและ cold ในออเดอร์เดียว): picks between two ways to price
+   * the same order based on whether the combined qty itself earns a real
+   * discount from the cold table —
+   *   - If calculateColdPrice(total) is exactly linear (total × 149, i.e.
+   *     no promo triggered at all — only true when total is 1, 2, or 4),
+   *     merged has nothing worth protecting, so let each product hit its
+   *     own promo table independently ("separate") + one shipping charge.
+   *     This is provably never worse for the customer than merged here:
+   *     mergedTotal in this zone reduces to coldQty×149 + squidQty×199
+   *     exactly, and each table's own price is always ≤ its own linear
+   *     rate, so separateTotal ≤ mergedTotal always holds.
+   *   - Otherwise (total = 3, or total ≥ 5) the cold table's combined
+   *     total genuinely earned a bundled discount (e.g. the base-5
+   *     free-shipping tier) — that's a deliberate combo incentive that
+   *     requires reaching that *combined* qty, so it must win outright
+   *     even when the separate-tables math comes out lower. Letting
+   *     "separate" undercut it here would mean every mixed order that
+   *     reaches the free-ship threshold gets priced as if it hadn't
+   *     (found via cold3+squid2, total=5: merged=839 is correct; the
+   *     naive "always pick cheaper" rule this replaced wrongly chose the
+   *     separate total of 748, underpricing a real promo).
+   * Matches every previously Bank-confirmed case (2+1→579, 4+1→789,
+   * 6+3→1417) and the two real LINE OA transcripts (629, 1417), plus
+   * cold3+squid1→728 (linear zone, separate correctly wins) and
+   * cold3+squid2→839 (promo zone, merged correctly wins).
    */
   function calculateMixedPrice(coldQty, squidQty) {
     coldQty = coldQty || 0;
@@ -120,6 +132,20 @@
 
     const total = coldQty + squidQty;
     const base = calculateColdPrice(total);
+    const isPromoZone = base.total !== total * 149;
+
+    if (!isPromoZone) {
+      const coldPart = calculateColdPrice(coldQty);
+      const squidPart = calculateSquidPrice(squidQty);
+      const separateTotal = coldPart.total + squidPart.total;
+      const separateShipping = base.shipping; // one chilled box either way — free-ship threshold judged on combined qty
+      return {
+        total: separateTotal,
+        shipping: separateShipping,
+        grand: separateTotal + separateShipping,
+        steps: coldPart.steps.concat(squidPart.steps),
+      };
+    }
 
     const mergedSteps = base.steps.map((s) =>
       s.replace('หมู/แตงกวา', 'สินค้ารวม').replace('โปรฐานหมู/แตงกวา', 'โปรฐานคละสินค้า').replace('โปรหมู/แตงกวา', 'โปรคละสินค้า')
@@ -128,19 +154,7 @@
       mergedSteps.push('หมึกกังฟู ' + squidQty + ' กระปุก (รวมในชุดคละ) = ' + formatBaht(squidQty * 50) + ' บาท (คิดกระปุกละ 50 บาทเมื่อคละกับหมู/แตงกวา)');
     }
     const mergedTotal = base.total + squidQty * 50;
-    const mergedGrand = mergedTotal + base.shipping;
-
-    const coldPart = calculateColdPrice(coldQty);
-    const squidPart = calculateSquidPrice(squidQty);
-    const separateTotal = coldPart.total + squidPart.total;
-    const separateShipping = base.shipping; // one chilled box either way — free-ship threshold judged on combined qty
-    const separateGrand = separateTotal + separateShipping;
-    const separateSteps = coldPart.steps.concat(squidPart.steps);
-
-    if (separateGrand < mergedGrand) {
-      return { total: separateTotal, shipping: separateShipping, grand: separateGrand, steps: separateSteps };
-    }
-    return { total: mergedTotal, shipping: base.shipping, grand: mergedGrand, steps: mergedSteps };
+    return { total: mergedTotal, shipping: base.shipping, grand: mergedTotal + base.shipping, steps: mergedSteps };
   }
 
   /**
